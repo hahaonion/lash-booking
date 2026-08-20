@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>예약 문의</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky: #FFFFFF;
+    --sky2: #F2FBFF;
+    --card: rgba(255,255,255,0.9);
+    --line: rgba(29,143,196,0.20);
+    --ocean: #1D8FC4;
+    --wave: #6FDBF5;
+    --wave-deep: #2CADDA;
+    --pop: #FFD93D;
+    --pop-deep: #F5B700;
+    --foam: #FFFFFF;
+    --text: #0B3550;
+    --text-dim: #4A90B8;
+    --text-faint: #AEE3F2;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 12% 4%, rgba(111,219,245,0.30), transparent 42%),
+      radial-gradient(circle at 92% 88%, rgba(44,173,218,0.14), transparent 45%),
+      linear-gradient(180deg, var(--sky), var(--sky2));
+    color: var(--text);
+    font-family:'Noto Sans KR', sans-serif;
+    min-height:100vh;
+    display:flex; justify-content:center;
+    padding: 44px 18px 90px;
+    overflow-x:hidden;
+  }
+  .page{ width:100%; max-width:460px; position:relative; }
+
+  .bubbles{ position:absolute; inset:-30px -20px auto -20px; height:170px; pointer-events:none; overflow:hidden; z-index:0;}
+  .bubble{
+    position:absolute; bottom:-20px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff, rgba(111,199,227,0.35) 60%, transparent 70%);
+    box-shadow: 0 0 4px rgba(255,255,255,0.6);
+    animation: rise linear infinite;
+  }
+  @keyframes rise{
+    0%{ transform: translateY(0) scale(1); opacity:0; }
+    12%{ opacity:.95; }
+    100%{ transform: translateY(-220px) scale(0.5); opacity:0; }
+  }
+
+  .brand{ position:relative; z-index:1; }
+  .brand h1{
+    font-family:'Quicksand', sans-serif; font-weight:700; font-size:27px;
+    letter-spacing:0; color: var(--ocean);
+  }
+  .brand .tag{ font-size:11px; color: var(--text-dim); letter-spacing:0.16em; text-transform:uppercase; margin-top:5px; }
+  .subhead{ position:relative; z-index:1; color: var(--text-dim); font-size:13px; margin:14px 0 12px; line-height:1.6; }
+
+  .info-block{ position:relative; z-index:1; text-align:left; margin:16px 0 6px; }
+  .info-title{ font-weight:600; color: var(--ocean); margin-bottom:6px; font-family:'Quicksand', sans-serif; font-size:13px; }
+  .info-list{ list-style:none; margin-bottom:4px; }
+  .info-list li{ position:relative; padding-left:14px; color: var(--text-dim); font-size:12.5px; line-height:1.65; margin-bottom:3px; }
+  .info-list li::before{ content:"•"; position:absolute; left:0; color: var(--wave-deep); }
+  .tag-sat{
+    display:inline-block; margin-left:6px; background: rgba(255,217,61,0.28); color:#8A6A00;
+    font-size:10px; padding:1px 7px; border-radius:8px; font-weight:600; vertical-align:middle;
+  }
+
+  .wave-divider{ position:relative; z-index:1; height:22px; margin-bottom:26px; opacity:0.9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 24'%3E%3Cpath d='M0 14 Q 25 2 50 14 T 100 14 T 150 14 T 200 14 V24 H0 Z' fill='%233FA9CE'/%3E%3C/svg%3E");
+    background-repeat: repeat-x; background-size: 100px 22px;
+    animation: drift 6s linear infinite;
+  }
+  @keyframes drift{ from{ background-position-x:0; } to{ background-position-x:-100px; } }
+
+  .month-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; position:relative; z-index:1;}
+  .month-row h2{ font-family:'Quicksand', sans-serif; font-weight:600; font-size:18px; color: var(--ocean); }
+  .nav-btn{
+    background: rgba(255,255,255,0.7); border:1px solid var(--line); color: var(--ocean);
+    width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition: all .15s;
+  }
+  .nav-btn:hover{ border-color: var(--wave-deep); background: var(--foam); }
+  .nav-group{ display:flex; gap:8px; }
+
+  .weekdays{ display:grid; grid-template-columns:repeat(7,1fr); font-size:11px; color: var(--text-faint); text-align:center; margin-bottom:8px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:7px; position:relative; z-index:1;}
+  .day{
+    aspect-ratio: 1/1.18;
+    position:relative;
+    border-radius: 8px;
+    background: var(--card);
+    border:1px solid var(--line);
+    overflow:hidden;
+    cursor:pointer;
+    box-shadow: 0 1px 2px rgba(31,111,139,0.06);
+    transition: transform .12s, border-color .15s;
+  }
+  .day.empty{ visibility:hidden; }
+  .day.past{ opacity:.25; cursor:default; }
+  .day:hover:not(.past):not(.full){ transform: translateY(-2px); border-color: var(--wave-deep); }
+  .day.selected{ border-color: var(--pop-deep); border-width:2px; box-shadow: 0 2px 10px rgba(245,183,0,0.25); }
+
+  .liquid{
+    position:absolute; left:0; right:0; bottom:0;
+    background: linear-gradient(180deg, var(--wave), var(--wave-deep));
+    transition: height .3s;
+    opacity:0.55;
+  }
+  .liquid::before{
+    content:""; position:absolute; top:-6px; left:0; right:0; height:8px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 20'%3E%3Cpath d='M0 10 Q 25 0 50 10 T 100 10 T 150 10 T 200 10 V20 H0 Z' fill='%236FC7E3'/%3E%3C/svg%3E");
+    background-repeat: repeat-x; background-size:60px 8px;
+    animation: drift 3.5s linear infinite;
+  }
+  .day.full .liquid{ background: linear-gradient(180deg, #8FD6EC, var(--wave-deep)); opacity:.35; }
+
+  .num{
+    position:relative; z-index:2; display:flex; align-items:center; justify-content:center;
+    height:100%; font-size:13px; font-weight:500; color: var(--text);
+  }
+  .day.full .num{ color: var(--text-faint); }
+  .day.closed .num{ height:70%; align-items:flex-end; padding-bottom:2px; }
+  .closed-label{
+    position:absolute; bottom:6px; left:0; right:0; text-align:center; z-index:2;
+    font-size:8.5px; color: var(--text-faint); letter-spacing:0.02em;
+  }
+
+  .legend{ display:flex; gap:16px; margin-top:16px; font-size:11px; color: var(--text-dim); position:relative; z-index:1;}
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .dot{ width:8px; height:8px; border-radius:50%; }
+  .dot.wave{ background: var(--pop-deep); }
+  .dot.faint{ background: var(--text-faint); }
+
+  .panel{
+    margin-top:26px; border:1px solid var(--line); border-radius:18px;
+    background: rgba(255,255,255,0.75); backdrop-filter: blur(6px);
+    padding:22px; display:none; position:relative; z-index:1;
+    box-shadow: 0 4px 20px rgba(31,111,139,0.08);
+  }
+  .panel.show{ display:block; }
+  .panel .date-label{ font-family:'Quicksand', sans-serif; font-weight:600; font-size:15px; margin-bottom:14px; color: var(--ocean);}
+  .slots{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px; }
+  .slot{
+    border:1px solid var(--line); border-radius:10px; padding:10px 0; text-align:center;
+    font-size:13px; color: var(--text-dim); cursor:pointer; transition: all .15s; background: rgba(255,255,255,0.5);
+  }
+  .slot:hover{ border-color: var(--wave-deep); color: var(--ocean); }
+  .slot.taken{ text-decoration:line-through; color: var(--text-faint); cursor:default; background:none; }
+  .slot.picked{ background: var(--ocean); color:#fff; border-color: var(--ocean); font-weight:700; }
+
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:11px; color: var(--text-dim); margin-bottom:6px; letter-spacing:.03em; }
+  .field input{
+    width:100%; background: rgba(255,255,255,0.7); border:1px solid var(--line); border-radius:10px;
+    padding:11px 13px; color: var(--text); font-size:13px; font-family:inherit;
+  }
+  .field input:focus{ outline:none; border-color: var(--wave-deep); }
+
+  .field label{ display:block; }
+  .radio-group{ display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .radio-option, .checkbox-option{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; color: var(--text);
+    cursor:pointer; font-weight:400;
+  }
+  .radio-option input, .checkbox-option input{
+    accent-color: var(--ocean); width:16px; height:16px; cursor:pointer; flex:none;
+  }
+  .checkbox-field label{ display:flex; }
+
+  .submit{
+    width:100%; margin-top:8px; background: linear-gradient(135deg, var(--wave-deep), var(--ocean));
+    color:#fff; border:none; border-radius:12px; padding:13px 0; font-weight:700; font-size:14px;
+    cursor:pointer; font-family:'Quicksand', sans-serif; transition: all .15s;
+    box-shadow: 0 3px 0 var(--pop-deep);
+  }
+  .submit:hover{ filter: brightness(1.05); transform: translateY(1px); box-shadow: 0 2px 0 var(--pop-deep); }
+  .submit:active{ transform: translateY(3px); box-shadow: none; }
+  .note{ font-size:11px; color: var(--text-faint); margin-top:10px; line-height:1.5; }
+
+  .footer-tag{ text-align:center; margin-top:40px; font-size:11px; color: var(--text-faint); letter-spacing:.04em; position:relative; z-index:1;}
+
+  /* ---- 안내사항 오버레이 ---- */
+  .notice-overlay{
+    position:fixed; inset:0; z-index:50;
+    background: rgba(11,53,80,0.45);
+    backdrop-filter: blur(4px);
+    display:flex; align-items:center; justify-content:center;
+    padding: 24px;
+  }
+  .notice-card{
+    width:100%; max-width:380px; max-height:84vh; overflow-y:auto;
+    background:#fff; border-radius:20px; padding:28px 24px 24px;
+    box-shadow: 0 12px 40px rgba(11,53,80,0.25);
+    text-align:center;
+  }
+  .notice-icon{ font-size:32px; margin-bottom:10px; }
+  .notice-card h2{ font-family:'Quicksand', sans-serif; font-weight:700; font-size:18px; color: var(--ocean); margin-bottom:14px; }
+  .notice-intro{
+    text-align:left; font-size:12.5px; color: var(--text); line-height:1.7; margin-bottom:20px;
+  }
+  .notice-items{ list-style:none; text-align:left; margin-bottom:18px; }
+  .notice-items > li{
+    display:flex; gap:10px; margin-bottom:16px;
+  }
+  .notice-items .num{
+    flex:none; width:22px; height:22px; border-radius:50%;
+    background: var(--ocean); color:#fff; font-size:11px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; margin-top:1px;
+  }
+  .notice-items .main{ font-size:13px; color: var(--text); font-weight:500; line-height:1.5; margin-bottom:4px; }
+  .notice-items .sub{
+    font-size:11.5px; color: var(--text-dim); line-height:1.55; padding-left:14px; position:relative; margin-top:3px;
+  }
+  .notice-items .sub::before{ content:"📎"; position:absolute; left:0; top:0; font-size:9px; }
+  .notice-items .sub.deny{ color:#D64545; font-weight:500; }
+  .notice-bulb{
+    background: rgba(255,217,61,0.18); border:1px solid rgba(245,183,0,0.35);
+    border-radius:12px; padding:12px 14px; font-size:12px; color: var(--text);
+    text-align:left; line-height:1.6; margin-bottom:20px;
+  }
+  .notice-confirm{
+    width:100%; background: linear-gradient(135deg, var(--wave-deep), var(--ocean));
+    color:#fff; border:none; border-radius:12px; padding:13px 0; font-weight:700; font-size:14px;
+    cursor:pointer; font-family:'Quicksand', sans-serif; box-shadow: 0 3px 0 var(--pop-deep);
+    transition: all .15s;
+  }
+  .notice-confirm:hover{ filter: brightness(1.05); transform: translateY(1px); box-shadow: 0 2px 0 var(--pop-deep); }
+  .notice-confirm:active{ transform: translateY(3px); box-shadow: none; }
+
+  .kakao-btn{
+    display:block; width:100%; text-align:center; text-decoration:none;
+    background:#FEE500; color:#391B1B; font-weight:700; font-size:14px;
+    font-family:'Quicksand', sans-serif; border-radius:12px; padding:13px 0;
+    box-shadow: 0 3px 0 #D9C400; transition: all .15s;
+  }
+  .kakao-btn:hover{ filter: brightness(1.03); transform: translateY(1px); box-shadow: 0 2px 0 #D9C400; }
+  .kakao-btn:active{ transform: translateY(3px); box-shadow: none; }
+
+  .close-link{
+    display:block; text-align:center; margin-top:14px; font-size:12px;
+    color: var(--text-faint); background:none; border:none; cursor:pointer; font-family:'Noto Sans KR', sans-serif;
+  }
+  .close-link:hover{ color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="notice-overlay" id="noticeOverlay">
+  <div class="notice-card">
+    <div class="notice-icon">🫧</div>
+    <h2>예약 전 안내사항</h2>
+
+    <p class="notice-intro">
+      수강 수료 후 연습하는 과정입니다.<br>
+      완벽한 결과를 원하시면 정식 속눈썹 매장에서 시술 받으시는 것을 권장드립니다만,
+      저에게 맡겨주시면 최선을 다해 시술해드리겠습니다 ☺️
+    </p>
+
+    <ol class="notice-items">
+      <li>
+        <span class="num">1</span>
+        <div>
+          <p class="main">노쇼 방지를 위해 예약금 3만원 발생합니다.</p>
+          <p class="sub">시술 완료 후 예약금 3만원 다시 돌려드립니다.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">2</span>
+        <div>
+          <p class="main">포트폴리오용 시술 사진 촬영합니다.</p>
+          <p class="sub">촬영한 사진은 매장 홍보 목적으로 사용될 수 있습니다.</p>
+          <p class="sub">흰색 마스크 지참 부탁드립니다.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">3</span>
+        <div>
+          <p class="main">무료 주차 2시간 지원해드립니다.</p>
+          <p class="sub">지하 3층에 주차하셔야 지원이 가능합니다.</p>
+        </div>
+      </li>
+      <li>
+        <span class="num">4</span>
+        <div>
+          <p class="main">당일 예약 변경 및 취소는 불가합니다.</p>
+          <p class="sub">예약 변경 및 취소는 최소 예약 이틀 전까지 말씀 부탁드립니다.</p>
+          <p class="sub deny">당일 예약 변경, 당일 예약 취소, 10분 이상 지각, 노쇼 시 예약금 환급 ✕</p>
+        </div>
+      </li>
+    </ol>
+
+    <p class="notice-bulb">💡 위 내용에 동의하시면, 예약금 입금하실 계좌번호 안내 드리겠습니다.</p>
+
+    <button class="notice-confirm" onclick="closeNotice()">동의했습니다</button>
+  </div>
+</div>
+
+<div class="notice-overlay" id="completeOverlay" style="display:none;">
+  <div class="notice-card">
+    <div class="notice-icon">💌</div>
+    <h2>예약 신청이 완료됐어요!</h2>
+    <p class="notice-intro" style="text-align:center;">
+      예약금 계좌번호 안내를 위해<br>아래 오픈채팅방으로 접속해주세요.
+    </p>
+    <a href="https://open.kakao.com/o/sZD4OEEi" target="_blank" rel="noopener" class="kakao-btn">오픈채팅방 바로가기 💬</a>
+    <button class="close-link" onclick="closeComplete()">닫기</button>
+  </div>
+</div>
+
+<div class="page">
+  <div class="bubbles" id="bubbles"></div>
+
+  <div class="brand">
+    <h1>속눈썹 모델 예약</h1>
+    <div class="tag">예약 안내 도와드리겠습니다 ☺️</div>
+  </div>
+
+  <div class="info-block">
+    <p class="info-title">📌 예약 가능하신 일정은 다음과 같습니다.</p>
+    <ul class="info-list">
+      <li>평일 (공휴일 제외) - 오후 8시</li>
+      <li>토요일 - 오전 9시, 오전 11시</li>
+    </ul>
+    <p class="info-title" style="margin-top:14px;">📌 시술 메뉴 공유드립니다.</p>
+    <ul class="info-list">
+      <li>속눈썹펌 (영양 / 블랙틴팅 중 1)</li>
+      <li>led일반연장 (70% 100% 120% 중 1)</li>
+      <li>led마스카라연장</li>
+      <li>led애니메연장</li>
+      <li>led펌포인트연장 (속눈썹펌+led연장)</li>
+      <li>언더펌 <span class="tag-sat">토요일만</span></li>
+      <li>led 언더연장 <span class="tag-sat">토요일만</span></li>
+    </ul>
+  </div>
+
+  <div class="wave-divider"></div>
+
+  <div class="month-row">
+    <h2 id="monthLabel">2026년 8월</h2>
+    <div class="nav-group">
+      <button class="nav-btn" onclick="shiftMonth(-1)">‹</button>
+      <button class="nav-btn" onclick="shiftMonth(1)">›</button>
+    </div>
+  </div>
+
+  <div class="weekdays"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="legend">
+    <span><i class="dot wave"></i> 예약 가능</span>
+    <span><i class="dot faint"></i> 마감</span>
+  </div>
+
+  <div class="panel" id="panel">
+    <div class="date-label" id="panelDate"></div>
+    <div class="slots" id="slots"></div>
+    <div class="field"><label>이름</label><input type="text" id="nameInput" placeholder="홍길동"></div>
+    <div class="field"><label>연락처</label><input type="text" id="phoneInput" placeholder="010-0000-0000"></div>
+
+    <div class="field">
+      <label>연장 제거가 필요하신가요?</label>
+      <div class="radio-group">
+        <label class="radio-option"><input type="radio" name="removalNeeded" value="네, 필요해요!"> 네, 필요해요!</label>
+        <label class="radio-option"><input type="radio" name="removalNeeded" value="아니요, 필요하지 않아요."> 아니요, 필요하지 않아요.</label>
+      </div>
+    </div>
+
+    <div class="field checkbox-field">
+      <label class="checkbox-option">
+        <input type="checkbox" id="agreePhoto">
+        모델 사진 촬영과 사용에 동의하시나요?
+      </label>
+    </div>
+
+    <div class="field checkbox-field">
+      <label class="checkbox-option">
+        <input type="checkbox" id="agreeEyePhoto">
+        사전에 정면/측면의 눈 사진을 공유해주셔야 합니다. 동의하시나요?
+      </label>
+    </div>
+
+    <button class="submit" id="submitBtn" onclick="submitBooking()">예약 신청하기</button>
+    <p class="note">신청 후 승인이 완료되면 확정 안내를 보내드려요. 이 화면의 예약 현황은 승인 즉시 자동 반영돼요.</p>
+  </div>
+
+  <div class="footer-tag">청량한 여름을 위한 예약</div>
+</div>
+
+<script>
+// 대한민국 법정공휴일 (2026년, 대체공휴일 포함 예시 — 실제 연결 시 구글 '대한민국의 휴일' 캘린더로 자동 대체됨)
+const HOLIDAYS = [
+  "2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18",
+  "2026-03-01", "2026-05-05", "2026-05-24", "2026-06-06",
+  "2026-08-15", "2026-09-24", "2026-09-25", "2026-09-26",
+  "2026-10-03", "2026-10-09", "2026-12-25",
+];
+const WEEKDAY_LABEL = ["일","월","화","수","목","금","토"];
+
+// ⚠️ 본인의 웹앱 URL로 꼭 교체하세요 (구글폼/시트 스크립트에서 배포한 그 주소)
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxy00_I7dKyVploIVH-34IebEvyFIvOfCxkUs09moxQnXVK78cioKOLWsNbS2FgeJdO/exec";
+
+let bookings = {}; // 처음엔 비어있다가, 실제 데이터를 불러오면 채워짐
+let viewYear=2026, viewMonth=7;
+
+async function loadBookings(){
+  try{
+    const res = await fetch(`${WEBAPP_URL}?action=bookings`);
+    bookings = await res.json();
+  }catch(err){
+    console.error("예약 현황을 불러오지 못했어요:", err);
+  }
+  render();
+}
+
+function pad(n){return n.toString().padStart(2,"0");}
+
+function getDayType(dateObj, key){
+  const dow = dateObj.getDay(); // 0=일 ... 6=토
+  if(dow===0 || HOLIDAYS.includes(key)) return "closed";
+  if(dow===6) return "sat";
+  return "weekday";
+}
+function maxSlots(type){ return type==="sat" ? 2 : type==="weekday" ? 1 : 0; }
+function timeOptionsFor(type){
+  return type==="sat"
+    ? [{label:"오전 9시", value:"토요일 오전9시"}, {label:"오전 11시", value:"토요일 오전11시"}]
+    : type==="weekday"
+    ? [{label:"오후 8시", value:"평일 오후 8시"}]
+    : [];
+}
+
+function makeBubbles(){
+  const wrap = document.getElementById("bubbles");
+  wrap.innerHTML="";
+  for(let i=0;i<16;i++){
+    const b = document.createElement("div");
+    b.className="bubble";
+    const size = 3 + Math.random()*9;
+    b.style.width = size+"px"; b.style.height=size+"px";
+    b.style.left = (Math.random()*100)+"%";
+    b.style.animationDuration = (4.5+Math.random()*5)+"s";
+    b.style.animationDelay = (Math.random()*6)+"s";
+    wrap.appendChild(b);
+  }
+}
+
+function render(){
+  const grid=document.getElementById("grid"); grid.innerHTML="";
+  document.getElementById("monthLabel").textContent=`${viewYear}년 ${viewMonth+1}월`;
+  const first=new Date(viewYear,viewMonth,1);
+  const startDow=first.getDay();
+  const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
+  const today=new Date(2026,7,20);
+
+  for(let i=0;i<startDow;i++){ const d=document.createElement("div"); d.className="day empty"; grid.appendChild(d); }
+
+  for(let day=1; day<=daysInMonth; day++){
+    const dateObj=new Date(viewYear,viewMonth,day);
+    const key=`${viewYear}-${pad(viewMonth+1)}-${pad(day)}`;
+    const type = getDayType(dateObj, key);
+    const max = maxSlots(type);
+    const taken = bookings[key]||0;
+    const remain = max - taken;
+    const isPast = dateObj < today;
+    const isClosed = type==="closed";
+    const isFull = isClosed || remain<=0;
+
+    const el=document.createElement("div");
+    el.className="day"+(isPast?" past":"")+(isFull?" full":"")+(isClosed?" closed":"");
+    el.innerHTML = isClosed
+      ? `<div class="num">${day}</div><div class="closed-label">휴무</div>`
+      : `<div class="liquid" style="height:${Math.max(remain/max*100,0)}%"></div><div class="num">${day}</div>`;
+    if(!isPast && !isFull){ el.onclick=()=>selectDate(key, dateObj, el, type); }
+    grid.appendChild(el);
+  }
+}
+
+function shiftMonth(delta){
+  viewMonth+=delta;
+  if(viewMonth<0){viewMonth=11; viewYear--;}
+  if(viewMonth>11){viewMonth=0; viewYear++;}
+  render();
+}
+
+let currentDate = null;
+let currentTime = null;
+
+function selectDate(key, dateObj, el, type){
+  document.querySelectorAll(".day.selected").forEach(d=>d.classList.remove("selected"));
+  el.classList.add("selected");
+  currentDate = key;
+  currentTime = null;
+  const taken=bookings[key]||0;
+  const options = timeOptionsFor(type);
+  const panel=document.getElementById("panel");
+  const slotsWrap=document.getElementById("slots");
+  const dowLabel = WEEKDAY_LABEL[dateObj.getDay()];
+  document.getElementById("panelDate").textContent = `${key.replace(/-/g,".")} (${dowLabel}) 예약 가능 시간`;
+  slotsWrap.innerHTML="";
+  options.forEach((opt,idx)=>{
+    const isTaken = idx<taken;
+    const s=document.createElement("div");
+    s.className="slot"+(isTaken?" taken":"");
+    s.textContent=opt.label;
+    if(!isTaken){
+      s.onclick=()=>{
+        document.querySelectorAll(".slot.picked").forEach(x=>x.classList.remove("picked"));
+        s.classList.add("picked");
+        currentTime = opt.value;
+      };
+    }
+    slotsWrap.appendChild(s);
+  });
+  panel.classList.add("show");
+  panel.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+function closeNotice(){
+  document.getElementById('noticeOverlay').style.display = 'none';
+}
+
+async function submitBooking(){
+  const name = document.getElementById('nameInput').value.trim();
+  const phone = document.getElementById('phoneInput').value.trim();
+  const removalRadio = document.querySelector('input[name="removalNeeded"]:checked');
+  const agreePhoto = document.getElementById('agreePhoto').checked;
+  const agreeEyePhoto = document.getElementById('agreeEyePhoto').checked;
+
+  if(!currentDate || !currentTime){ alert('날짜와 시간을 선택해주세요.'); return; }
+  if(!name || !phone){ alert('이름과 연락처를 입력해주세요.'); return; }
+  if(!removalRadio){ alert('연장 제거 필요 여부를 선택해주세요.'); return; }
+  if(!agreePhoto){ alert('모델 사진 촬영 및 사용 동의가 필요해요.'); return; }
+  if(!agreeEyePhoto){ alert('눈 사진 공유 동의가 필요해요.'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '신청 중...';
+
+  try{
+    await fetch(WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        name, phone, date: currentDate, time: currentTime,
+        removalNeeded: removalRadio.value,
+        agreePhoto: agreePhoto ? "네, 동의합니다." : "",
+        agreeEyePhoto: agreeEyePhoto ? "네, 동의합니다." : "",
+      })
+    });
+    document.getElementById('completeOverlay').style.display = 'flex';
+  }catch(err){
+    alert('신청 중 오류가 발생했어요. 다시 시도해주세요.');
+    console.error(err);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '예약 신청하기';
+  }
+}
+
+function closeComplete(){
+  document.getElementById('completeOverlay').style.display = 'none';
+}
+
+makeBubbles();
+loadBookings();
+</script>
+</body>
+</html>
